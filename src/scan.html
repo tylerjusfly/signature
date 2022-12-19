@@ -1,0 +1,89 @@
+<html>    
+<head runat="server">
+<title>ePadLink SigCaptureWeb SDK Sample</title>     
+<script type="text/javascript">
+	var imgWidth;
+	var imgHeight;
+	function StartSign()
+	 {      
+	    var canvasObj = document.getElementById('cnv');
+		canvasObj.getContext('2d').clearRect(0, 0, canvasObj.width, canvasObj.height);
+		document.FORM1.sigRawData.value = "Signature Raw Data: ";
+		document.FORM1.sigImageData.value = "Signature Image Data: ";
+		imgWidth = canvasObj.width;
+		imgHeight = canvasObj.height;
+		var message = { "firstName": "", "lastName": "", "eMail": "", "location": "", "imageFormat": 1, "imageX": imgWidth, "imageY": imgHeight, "imageTransparency": false, "imageScaling": false, "maxUpScalePercent": 0.0, "rawDataFormat": "ENC", "minSigPoints": 25 };
+
+		document.addEventListener('SigCaptureWeb_SignResponse', SignResponse, false);
+		var messageData = JSON.stringify(message);
+		var element = document.createElement("SigCaptureWeb_ExtnDataElem");
+		element.setAttribute("SigCaptureWeb_MsgAttribute", messageData);
+		document.documentElement.appendChild(element);
+		var evt = document.createEvent("Events");
+		evt.initEvent("SigCaptureWeb_SignStartEvent", true, false);				
+		element.dispatchEvent(evt);		
+    }
+	function SignResponse(event)
+	{
+	    var str = event.target.getAttribute("SigCaptureWeb_msgAttri");
+		var obj = JSON.parse(str);
+		SetValues(obj, imgWidth, imgHeight);
+	}
+	function SetValues(objResponse, imageWidth, imageHeight)
+	{
+        var obj = JSON.parse(JSON.stringify(objResponse));
+	    var ctx = document.getElementById('cnv').getContext('2d');
+
+			if (obj.errorMsg != null && obj.errorMsg!="" && obj.errorMsg!="undefined")
+			{
+                alert(obj.errorMsg);
+            }
+            else
+			{
+                if (obj.isSigned)
+				{
+				    document.FORM1.sigRawData.value += obj.rawData;
+				    document.FORM1.sigImageData.value += obj.imageData;
+					var img = new Image();
+					img.onload = function () 
+					{
+						ctx.drawImage(img, 0, 0, imageWidth, imageHeight);
+					}
+					img.src = "data:image/png;base64," + obj.imageData;
+                }
+            }
+    }
+    
+    function ClearFormData()
+	{
+	     document.FORM1.sigRawData.value = "Signature Raw Data: ";
+	     document.FORM1.sigImageData.value = "Signature Image Data: ";
+	     
+	}
+</script> 
+</head>
+<body onload="ClearFormData()">
+   <h2>ePadLink SigCaptureWeb SDK Sample Page</h2>
+    <table border="1" cellpadding="0"  width="500">
+        <tr>
+            <td height="100" width="500">
+                <canvas id="cnv" name="cnv" width="500" height="100"></canvas>
+            </td>
+        </tr>
+    </table>
+    
+    <canvas name="SigImg" id="SigImg" width="500" height="100"></canvas>
+    <form action="#" name=FORM1>
+		<p>
+			<input id="SignBtn" name="SignBtn" type="button" value="Sign"  onclick="StartSign()"/>&nbsp;&nbsp;&nbsp;&nbsp;
+			<INPUT TYPE=HIDDEN NAME="bioSigData">
+			<INPUT TYPE=HIDDEN NAME="sigImgData">
+			<BR>
+			<BR>
+			<TEXTAREA NAME="sigRawData" ROWS="20" COLS="50">Signature Raw Data: </TEXTAREA>
+			<TEXTAREA NAME="sigImageData" ROWS="20" COLS="50">Signature Image Data: </TEXTAREA>
+		</p>
+	</form>
+	<br /><br />
+</body>
+</html>
